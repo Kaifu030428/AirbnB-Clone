@@ -1,32 +1,15 @@
-import PropertyCard from "../components/PropertyCard";
+import React from "react";
+import Navbar from "../components/Navbar";
+import SearchBar from "../components/SearchBar";
+import PropertyRow from "../components/PropertyRow";
 
 const Home = () => {
-  const properties = [
-    {
-      id: 1,
-      name: "Beach House",
-      location: "Goa",
-      price: 2500,
-      image: "https://via.placeholder.com/300",
-    },
-    {
-      id: 2,
-      name: "Mountain View",
-      location: "Manali",
-      price: 1800,
-      image: "https://via.placeholder.com/300",
-    },
-  ];
-
   return (
-    <div className="px-10 py-6">
-      <h1 className="text-3xl font-bold mb-6">Explore Places</h1>
+    <div>
+      <SearchBar />
 
-      <div className="flex gap-6 flex-wrap">
-        {properties.map((property) => (
-          <PropertyCard key={property.id} property={property} />
-        ))}
-      </div>
+      <PropertyRow title="Popular homes in North Goa" />
+      <PropertyRow title="Available next month in South Goa" />
     </div>
   );
 };

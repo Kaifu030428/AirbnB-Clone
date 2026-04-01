@@ -1,18 +1,19 @@
+import React from "react";
 import { Link } from "react-router-dom";
 
-const PropertyCard = ({ property }) => {
+const PropertyCard = () => {
   return (
-    <Link to={`/property/${property.id}`}>
-      <div className="w-64 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition">
+    <Link to="/property/1">
+      <div className="w-64 cursor-pointer">
         <img
-          src={property.image}
-          alt={property.name}
-          className="w-full h-40 object-cover"
+          src="https://images.unsplash.com/photo-1568605114967-8130f3a36994"
+          className="rounded-xl h-40 w-full object-cover"
         />
-        <div className="p-3">
-          <h2 className="text-lg font-semibold">{property.name}</h2>
-          <p className="text-gray-500">{property.location}</p>
-          <p className="text-rose-500 font-bold">₹ {property.price} / night</p>
+
+        <div className="mt-2">
+          <h3 className="font-semibold">Home in Goa</h3>
+          <p className="text-gray-500 text-sm">₹10,000 for 2 nights</p>
+          <p className="text-sm">⭐ 4.8</p>
         </div>
       </div>
     </Link>
