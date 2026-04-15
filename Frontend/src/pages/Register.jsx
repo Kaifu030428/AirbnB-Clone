@@ -1,44 +1,46 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
 
 const Register = () => {
   return (
-    <div className="flex justify-center items-center h-[80vh]">
-      <div className="w-96 p-6 shadow-xl rounded-2xl">
-        <h2 className="text-2xl font-bold mb-4 text-center">Register</h2>
+    <div className="flex justify-center items-center px-6 py-12 min-h-[70vh] bg-gradient-to-b from-rose-50/60 to-white">
+      <Card className="w-full max-w-md p-7 shadow-xl border-gray-100">
+        <h2 className="text-2xl font-bold mb-1 text-center text-gray-900">Create account</h2>
+        <p className="text-center text-gray-500 mb-6">Join ArBn and start planning your stay.</p>
 
         <form className="flex flex-col gap-4">
           <input
             type="text"
             placeholder="Name"
-            className="border p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
+            className="border border-gray-300 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-400"
           />
 
           <input
             type="email"
             placeholder="Email"
-            className="border p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
+            className="border border-gray-300 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-400"
           />
 
           <input
             type="password"
             placeholder="Password"
-            className="border p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
+            className="border border-gray-300 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-400"
           />
 
-          <button className="bg-rose-500 text-white py-2 rounded-lg hover:bg-rose-600 transition">
+          <Button type="submit" className="w-full">
             Register
-          </button>
+          </Button>
         </form>
 
-        {/* Login link */}
-        <p className="text-center mt-4">
+        <p className="text-center mt-5 text-sm text-gray-600">
           Already have an account?{" "}
-          <Link to="/login" className="text-rose-500 font-semibold">
+          <Link to="/login" className="text-airbnb font-semibold hover:underline">
             Login
           </Link>
         </p>
-      </div>
+      </Card>
     </div>
   );
 };
