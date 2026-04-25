@@ -1,41 +1,79 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 
 const Login = () => {
   return (
-    <div className="flex justify-center items-center px-6 py-12 min-h-[70vh] bg-gradient-to-b from-rose-50/60 to-white">
-      <Card className="w-full max-w-md p-7 shadow-xl border-gray-100">
-        <h2 className="text-2xl font-bold mb-1 text-center text-gray-900">Welcome back</h2>
-        <p className="text-center text-gray-500 mb-6">Login to continue booking amazing stays.</p>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex justify-center items-center px-6 py-20 min-h-[85vh] bg-gray-50/30"
+    >
+      <Card className="w-full max-w-[450px] p-8 shadow-2xl border-none rounded-3xl bg-white">
+        {/* Header */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-gray-900">Log in</h2>
+          <p className="text-sm text-gray-500 mt-1 font-light">Welcome back to ArBn</p>
+        </div>
 
-        <form className="flex flex-col gap-4">
-          <input
-            type="email"
-            placeholder="Email"
-            className="border border-gray-300 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-400"
-          />
+        <form className="space-y-0" onSubmit={(e) => e.preventDefault()}>
+          {/* Input Group - Airbnb Signature Style */}
+          <div className="border border-gray-400 rounded-xl overflow-hidden mb-5">
+            <div className="border-b border-gray-400 p-3 focus-within:bg-gray-50 transition-colors">
+              <label className="block text-[10px] font-bold uppercase text-gray-600">Email</label>
+              <input
+                type="email"
+                placeholder="email@example.com"
+                className="w-full text-sm outline-none bg-transparent pt-1 placeholder:text-gray-300"
+                required
+              />
+            </div>
+            <div className="p-3 focus-within:bg-gray-50 transition-colors">
+              <label className="block text-[10px] font-bold uppercase text-gray-600">Password</label>
+              <input
+                type="password"
+                placeholder="********"
+                className="w-full text-sm outline-none bg-transparent pt-1 placeholder:text-gray-300"
+                required
+              />
+            </div>
+          </div>
 
-          <input
-            type="password"
-            placeholder="Password"
-            className="border border-gray-300 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-400"
-          />
-
-          <Button type="submit" className="w-full">
-            Login
+          <Button type="submit" className="w-full py-3.5 bg-[#FF385C] hover:bg-[#D70466] text-white rounded-xl text-md font-bold shadow-md transition-all active:scale-[0.98]">
+            Continue
           </Button>
         </form>
 
-        <p className="text-center mt-5 text-sm text-gray-600">
+        {/* Divider */}
+        <div className="flex items-center my-6 gap-4">
+          <div className="h-[1px] bg-gray-200 flex-1"></div>
+          <span className="text-xs text-gray-400 font-medium">or</span>
+          <div className="h-[1px] bg-gray-200 flex-1"></div>
+        </div>
+
+        {/* Social Logins */}
+        <div className="space-y-3">
+          <button className="w-full flex items-center justify-center gap-3 border-2 border-gray-900 p-3 rounded-xl hover:bg-gray-50 transition font-semibold text-sm">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+            Continue with Google
+          </button>
+          <button className="w-full flex items-center justify-center gap-3 border-2 border-gray-900 p-3 rounded-xl hover:bg-gray-50 transition font-semibold text-sm">
+            <span className="material-symbols-outlined text-xl">apple</span>
+            Continue with Apple
+          </button>
+        </div>
+
+        {/* Footer Link */}
+        <p className="text-center mt-8 text-[13px] text-gray-600 font-light">
           Don't have an account?{" "}
-          <Link to="/register" className="text-airbnb font-semibold hover:underline">
-            Register
+          <Link to="/register" className="text-black font-bold hover:underline underline-offset-4">
+            Sign up
           </Link>
         </p>
       </Card>
-    </div>
+    </motion.div>
   );
 };
 

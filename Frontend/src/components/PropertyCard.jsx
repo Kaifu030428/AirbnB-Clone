@@ -1,52 +1,60 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
 const PropertyCard = ({ property }) => {
-  const {
-    id = 1,
-    location = "North Goa, India",
-    description = "Mountain and pool views",
-    dates = "15-20 Oct",
-    price = 10000,
-    rating = 4.8,
-    image = "https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-  } = property ?? {};
+  const [isLiked, setIsLiked] = useState(false);
+  const { id, location, description, dates, price, rating, image } = property;
 
   return (
-    <Link
-      to={`/property/${id}`}
-      className="group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-airbnb rounded-2xl"
-      aria-label={`View details for ${location}`}
-    >
-      <div className="flex flex-col cursor-pointer transition-transform duration-300 group-hover:-translate-y-1">
-        <div className="relative aspect-square w-full overflow-hidden rounded-2xl mb-3">
-          <img
-            src={image}
-            alt={location}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-          <div className="absolute top-3 right-3 text-white hover:scale-110 transition drop-shadow-md">
-            <span className="material-symbols-outlined font-normal text-[26px] fill-black/30 w-[24px]">favorite</span>
+    <Link to={`/property/${id}`} className="group flex flex-col gap-3">
+      {/* Image Container - Square Aspect, soft corners, elegant shadow */}
+      <div className="relative aspect-square w-full overflow-hidden rounded-[1.2rem] bg-gray-100 ring-1 ring-black/5">
+        <motion.img 
+          src={image} 
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+          alt={location}
+        />
+        
+        {/* Heart Overlay */}
+        <button 
+          onClick={(e) => { e.preventDefault(); setIsLiked(!isLiked); }}
+          className="absolute top-3.5 right-3.5 z-10 p-1.5 rounded-full transition-transform active:scale-90"
+        >
+          <span 
+            className={`material-symbols-outlined text-[28px] drop-shadow-md transition-colors ${isLiked ? "text-[#FF385C] fill-1" : "text-white/90 hover:text-white"}`}
+            style={{ fontVariationSettings: isLiked ? "'FILL' 1" : "'FILL' 0" }}
+          >
+            favorite
+          </span>
+        </button>
+
+        {/* Subtle Dark Gradient Overlay on Hover */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+      </div>
+
+      {/* Info Section - Focus on White Space & Light Typography */}
+      <div className="flex flex-col gap-0.5">
+        <div className="flex justify-between items-center">
+          <h3 className="font-bold text-[15px] text-gray-900 leading-tight">
+            {location}
+          </h3>
+          <div className="flex items-center gap-1">
+            <span className="material-symbols-outlined text-[14px] fill-1">star</span>
+            <span className="text-[14px] font-light text-gray-700">{rating}</span>
           </div>
         </div>
-
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="font-semibold text-[15px] text-gray-900 leading-tight">{location}</h3>
-            <p className="text-gray-500 text-[15px] leading-tight mt-1">{description}</p>
-            <p className="text-gray-500 text-[15px] leading-tight">{dates}</p>
-            <div className="mt-2 flex items-center gap-1">
-              <span className="font-semibold text-[15px] text-gray-900">
-                ₹{price.toLocaleString("en-IN")}
-              </span>
-              <span className="text-gray-600 text-[15px]">night</span>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-1 text-[15px]" aria-label={`Rated ${rating} stars`}>
-            <span className="material-symbols-outlined text-sm font-bold">star</span>
-            <span>{rating}</span>
-          </div>
+        
+        <p className="text-gray-500 text-[15px] font-light leading-tight truncate">
+          {description}
+        </p>
+        <p className="text-gray-500 text-[15px] font-light leading-tight">
+          {dates}
+        </p>
+        
+        <div className="mt-2.5 flex items-center gap-1.5">
+          <span className="font-bold text-[16px] text-gray-900">₹{price.toLocaleString("en-IN")}</span>
+          <span className="text-gray-600 text-[15px] font-light">night</span>
         </div>
       </div>
     </Link>
