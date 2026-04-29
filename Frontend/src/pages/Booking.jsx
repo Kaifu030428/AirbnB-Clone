@@ -1,22 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation, useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
-import { properties } from "../data/properties";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const Booking = () => {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const propertyId = Number(id);
-  const selectedProperty = properties.find((item) => item.id === propertyId);
+
+  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProperty = async () => {
+      try {
+        const res = await axios.get(`http://localhost:8000/api/properties/${id}`);
+        if (res.data.success) {
+          setSelectedProperty(res.data.property);
+        }
+      } catch (error) {
+        console.error("Failed to fetch property:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProperty();
+  }, [id]);
 
   // Extracting state from previous page
   const { checkIn, checkOut, guests, totalPrice, propertyName } = location.state || {};
   const validBookingData = checkIn && checkOut && guests && totalPrice;
 
-  // Dynamic Calculation (Removing the 5-nights hardcoded bug)
+  // Dynamic Calculation
   const serviceFee = 1200;
   const basePrice = totalPrice ? totalPrice - serviceFee : 0;
   const nightsCount = selectedProperty ? Math.round(basePrice / selectedProperty.price) : 0;
@@ -24,16 +42,46 @@ const Booking = () => {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleBooking = () => {
+  // Split with Friends State
+  const [isSplitting, setIsSplitting] = useState(false);
+  const [friendsCount, setFriendsCount] = useState(1);
+
+  const handleBooking = async () => {
     if (!name || !phone) return;
     
-    // Simulate API Call with loading state
-    setIsConfirmed(true);
-    setTimeout(() => {
-        // Redirect logic will go here
-        // navigate("/"); 
-    }, 4000);
+    setIsSubmitting(true);
+    const toastId = toast.loading("Processing your booking...");
+
+    try {
+      const response = await axios.post(
+        "http://localhost:8000/api/bookings",
+        {
+          propertyId: id,
+          checkIn,
+          checkOut,
+          guests,
+          totalPrice,
+          name,
+          phone,
+        },
+        { withCredentials: true }
+      );
+
+      if (response.data.success) {
+        toast.success("Booking confirmed!", { id: toastId });
+        setIsConfirmed(true);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(
+        error.response?.data?.message || "Failed to confirm booking. Are you logged in?",
+        { id: toastId }
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Success State UI
@@ -59,6 +107,14 @@ const Booking = () => {
             Explore more stays
             </Link>
         </motion.div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[75vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
       </div>
     );
   }
@@ -137,6 +193,80 @@ const Booking = () => {
 
             <hr className="border-gray-200" />
 
+            {/* 🤝 Split Bill with Friends Feature */}
+            <section className="bg-gradient-to-br from-[#FF385C]/5 to-pink-50 p-6 rounded-2xl border border-[#FF385C]/20 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                <span className="material-symbols-outlined text-8xl">group</span>
+              </div>
+              <div className="relative z-10">
+                <h2 className="text-xl font-bold mb-2 text-gray-900 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#FF385C]">call_split</span>
+                  Split with Friends
+                </h2>
+                <p className="text-gray-600 text-sm mb-5 font-light">
+                  Traveling with a group? Split the cost easily. You only pay your share today!
+                </p>
+                
+                <div className="flex items-center gap-4 mb-5">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <div className={`w-12 h-6 rounded-full p-1 transition-colors ${isSplitting ? 'bg-[#FF385C]' : 'bg-gray-300'}`} onClick={() => setIsSplitting(!isSplitting)}>
+                      <motion.div 
+                        layout 
+                        className="bg-white w-4 h-4 rounded-full shadow-md"
+                        animate={{ x: isSplitting ? 24 : 0 }}
+                      />
+                    </div>
+                    <span className="text-sm font-semibold text-gray-800">Enable Split Payment</span>
+                  </label>
+                </div>
+
+                <AnimatePresence>
+                  {isSplitting && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-4 overflow-hidden"
+                    >
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 uppercase mb-2">How many friends are joining?</label>
+                        <div className="flex items-center gap-3">
+                          <button 
+                            onClick={() => setFriendsCount(Math.max(1, friendsCount - 1))}
+                            className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:border-black transition active:scale-95 bg-white"
+                          >
+                            <span className="material-symbols-outlined text-lg">remove</span>
+                          </button>
+                          <span className="text-lg font-semibold w-6 text-center">{friendsCount}</span>
+                          <button 
+                            onClick={() => setFriendsCount(Math.min(10, friendsCount + 1))}
+                            className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:border-black transition active:scale-95 bg-white"
+                          >
+                            <span className="material-symbols-outlined text-lg">add</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="pt-2">
+                        <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Invite them via Email</label>
+                        <div className="relative border border-gray-300 bg-white rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-[#FF385C] focus-within:border-transparent transition-all flex items-center gap-2">
+                          <span className="material-symbols-outlined text-gray-400 text-lg">mail</span>
+                          <input
+                            type="text"
+                            placeholder="friend1@email.com, friend2@..."
+                            className="w-full text-sm outline-none font-light"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2 font-light">We'll send them a secure link to pay their share.</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </section>
+
+            <hr className="border-gray-200" />
+
             <section>
                 <h2 className="text-2xl font-semibold mb-4 text-gray-900">Cancellation policy</h2>
                 <p className="text-gray-600 text-[15px] font-light leading-relaxed">
@@ -147,12 +277,12 @@ const Booking = () => {
 
             <Button
               onClick={handleBooking}
-              disabled={!name || !phone}
+              disabled={!name || !phone || isSubmitting}
               className={`w-full md:w-fit px-12 py-4 text-lg font-bold rounded-xl shadow-lg transition-all active:scale-[0.98] ${
-                name && phone ? "bg-[#FF385C] hover:bg-[#D70466] text-white" : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                name && phone && !isSubmitting ? "bg-[#FF385C] hover:bg-[#D70466] text-white" : "bg-gray-200 text-gray-400 cursor-not-allowed"
               }`}
             >
-              Confirm and pay
+              {isSubmitting ? "Processing..." : "Confirm and pay"}
             </Button>
           </div>
 
@@ -193,8 +323,27 @@ const Booking = () => {
                         <hr className="border-gray-200 mt-4" />
                         <div className="flex justify-between text-black font-bold text-lg pt-2">
                             <span>Total (INR)</span>
-                            <span>₹{Number(totalPrice).toLocaleString("en-IN")}</span>
+                            <span className={isSplitting ? "line-through text-gray-400 text-base" : ""}>₹{Number(totalPrice).toLocaleString("en-IN")}</span>
                         </div>
+                        
+                        <AnimatePresence>
+                          {isSplitting && (
+                            <motion.div 
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -10 }}
+                              className="mt-4 p-4 bg-[#FF385C]/10 rounded-xl border border-[#FF385C]/20"
+                            >
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="font-semibold text-gray-900 text-sm">Your share today</span>
+                                <span className="font-bold text-[#FF385C] text-xl">₹{Math.round(totalPrice / (friendsCount + 1)).toLocaleString("en-IN")}</span>
+                              </div>
+                              <p className="text-[11px] text-gray-600 font-light text-right">
+                                Split exactly by {friendsCount + 1} people
+                              </p>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                     </div>
                 </div>
             </Card>

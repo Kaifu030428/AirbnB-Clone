@@ -1,18 +1,67 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import ImageGallery from "../components/ImageGallery";
 import CustomDatePicker from "../components/CustomDatePicker"; // Apna naya premium calendar
-import { properties } from "../data/properties";
+import axios from "axios";
 import toast from "react-hot-toast";
 
 const PropertyDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const propertyId = Number(id);
-  const selectedProperty = properties.find((item) => item.id === propertyId);
+
+  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Audio Guide State
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef(null);
+
+  const getAudioUrl = (location) => {
+    const loc = location?.toLowerCase() || "";
+    // Using standard .mp3 URLs which have better browser support
+    if (loc.includes("goa") || loc.includes("beach") || loc.includes("kerala") || loc.includes("mumbai")) {
+      return "https://cdn.pixabay.com/download/audio/2022/01/18/audio_03d985dbd8.mp3?filename=ocean-waves-112906.mp3";
+    }
+    if (loc.includes("manali") || loc.includes("mountain") || loc.includes("nature") || loc.includes("shimla")) {
+      return "https://cdn.pixabay.com/download/audio/2022/10/09/audio_6065cd0fa5.mp3?filename=forest-with-small-river-birds-and-nature-field-recording-122046.mp3";
+    }
+    return "https://cdn.pixabay.com/download/audio/2022/02/07/audio_0cb39d2ecb.mp3?filename=coffee-shop-ambience-113426.mp3";
+  };
+
+  const toggleAudio = async () => {
+    try {
+      if (isPlaying) {
+        audioRef.current?.pause();
+        setIsPlaying(false);
+      } else {
+        await audioRef.current?.play();
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      console.warn("Audio playback failed:", error);
+      toast.error("Audio not supported or blocked by browser.");
+      setIsPlaying(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchProperty = async () => {
+      try {
+        const res = await axios.get(`http://localhost:8000/api/properties/${id}`);
+        if (res.data.success) {
+          setSelectedProperty(res.data.property);
+        }
+      } catch (error) {
+        console.error("Failed to fetch property:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProperty();
+  }, [id]);
 
   const pricePerNight = selectedProperty?.price ?? 10000;
   const maxGuests = selectedProperty?.guests ?? 4;
@@ -32,6 +81,14 @@ const PropertyDetails = () => {
 
   const basePrice = nightsCount * pricePerNight;
   const totalPrice = basePrice + serviceFee;
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   if (!selectedProperty) {
     return (
@@ -96,38 +153,102 @@ const PropertyDetails = () => {
         {/* Left Side: Info */}
         <div className="lg:col-span-8">
           <div className="border-b border-gray-200 pb-8 mb-8">
-            <h2 className="text-2xl font-semibold mb-1">Entire home hosted by ArBn Host</h2>
+            <h2 className="text-2xl font-semibold mb-1 font-serif">Curated Estate hosted by LUXE Concierge</h2>
             <p className="text-gray-500 font-light">{maxGuests} guests · 2 bedrooms · 2 beds · 1 bath</p>
           </div>
 
           <div className="space-y-6 pb-8 border-b border-gray-200">
             <div className="flex items-start gap-4">
-              <span className="material-symbols-outlined text-[32px] text-gray-800">workspace_premium</span>
+               <span className="material-symbols-outlined text-[32px] text-[#D4AF37]">diamond</span>
               <div>
-                <p className="font-semibold text-gray-900">ArBn is a Superhost</p>
-                <p className="text-sm text-gray-500">Superhosts are experienced, highly rated hosts who are committed to providing great stays for guests.</p>
+                <p className="font-semibold text-gray-900">LUXE Premiere Service</p>
+                <p className="text-sm text-gray-500">Every estate comes with a dedicated concierge and premium amenities tailored to your preferences.</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
-              <span className="material-symbols-outlined text-[32px] text-gray-800">location_on</span>
+              <span className="material-symbols-outlined text-[32px] text-[#D4AF37]">location_on</span>
               <div>
-                <p className="font-semibold text-gray-900">Great location</p>
-                <p className="text-sm text-gray-500">95% of recent guests gave the location a 5-star rating.</p>
+                <p className="font-semibold text-gray-900">Exceptional Location</p>
+                <p className="text-sm text-gray-500">100% of recent members gave the location a 5-star rating.</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
-              <span className="material-symbols-outlined text-[32px] text-gray-800">calendar_month</span>
+              <span className="material-symbols-outlined text-[32px] text-[#D4AF37]">calendar_month</span>
               <div>
-                <p className="font-semibold text-gray-900">Free cancellation for 48 hours.</p>
+                <p className="font-semibold text-gray-900">Flexible 48-hour cancellation.</p>
               </div>
             </div>
           </div>
 
           <div className="mt-8">
-            <h2 className="text-xl font-semibold mb-4">About this space</h2>
+            <h2 className="text-xl font-semibold mb-4 font-serif">About this estate</h2>
             <p className="text-gray-700 leading-relaxed font-light">
-              {selectedProperty.description} Experience the best of hospitality in this uniquely designed home, carefully crafted to provide you with the ultimate comfort and a memorable stay.
+              {selectedProperty.description} Experience the zenith of luxury hospitality in this uniquely designed estate, carefully crafted to provide you with the ultimate comfort and a memorable stay.
             </p>
+          </div>
+
+          {/* 🎧 Local Vibe Audio Guide */}
+          <div className="mt-10 p-6 bg-[#111] rounded-2xl border border-gray-800">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="bg-[#222] p-3 rounded-full shadow-sm">
+                  <span className="material-symbols-outlined text-[28px] text-[#D4AF37]">
+                    headphones
+                  </span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-lg font-serif">Immersive Ambiance</h3>
+                  <p className="text-gray-400 text-sm font-light">
+                    Experience the ambient sounds of {selectedProperty.location.split(',')[0]}.
+                  </p>
+                </div>
+              </div>
+
+              <audio ref={audioRef} loop src={getAudioUrl(selectedProperty.location)} />
+
+              <button
+                onClick={toggleAudio}
+                className="flex items-center gap-2 bg-[#D4AF37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-full font-semibold transition-all active:scale-95 shadow-md"
+              >
+                {isPlaying ? (
+                  <>
+                    <span className="material-symbols-outlined animate-pulse">pause</span>
+                    Pause Audio
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined">play_arrow</span>
+                    Play Audio
+                  </>
+                )}
+              </button>
+            </div>
+            
+            {/* Simple Animated Waveform when playing */}
+            <AnimatePresence>
+              {isPlaying && (
+                <motion.div 
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 24, opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="flex items-center justify-center gap-1 mt-6 overflow-hidden"
+                >
+                  {[...Array(20)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      animate={{ height: ["20%", "100%", "30%", "80%", "20%"] }}
+                      transition={{ 
+                        duration: 1.5, 
+                        repeat: Infinity, 
+                        ease: "easeInOut",
+                        delay: i * 0.05 
+                      }}
+                      className="w-1.5 bg-[#D4AF37] rounded-full opacity-80"
+                    />
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
@@ -136,7 +257,7 @@ const PropertyDetails = () => {
           <Card className="sticky top-28 p-6 shadow-2xl border border-gray-200 rounded-3xl bg-white z-10">
             <div className="flex justify-between items-end mb-6">
               <div>
-                <span className="text-2xl font-bold">₹{pricePerNight.toLocaleString("en-IN")}</span>
+                <span className="text-2xl font-bold font-serif">₹{pricePerNight.toLocaleString("en-IN")}</span>
                 <span className="text-gray-500 font-light text-sm"> / night</span>
               </div>
             </div>
@@ -168,7 +289,7 @@ const PropertyDetails = () => {
               onClick={handleReserve}
               disabled={nightsCount === 0}
               className={`w-full py-3.5 rounded-xl text-lg font-bold tracking-wide shadow-md transition-all ${
-                nightsCount > 0 ? "bg-[#FF385C] hover:bg-[#E31C5F] text-white active:scale-[0.98]" : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                nightsCount > 0 ? "bg-[#111] hover:bg-[#333] text-[#D4AF37] active:scale-[0.98]" : "bg-gray-200 text-gray-400 cursor-not-allowed"
               }`}
             >
               {nightsCount > 0 ? "Reserve" : "Check availability"}
@@ -188,7 +309,7 @@ const PropertyDetails = () => {
                     <span>₹{basePrice.toLocaleString("en-IN")}</span>
                   </div>
                   <div className="flex justify-between font-light">
-                    <span className="underline cursor-pointer hover:text-black">Airbnb service fee</span>
+                    <span className="underline cursor-pointer hover:text-black">LUXE Concierge Fee</span>
                     <span>₹{serviceFee.toLocaleString("en-IN")}</span>
                   </div>
                   <hr className="border-gray-200 mt-4" />

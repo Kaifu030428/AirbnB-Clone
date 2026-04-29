@@ -19,6 +19,7 @@ const ImageGallery = ({ images = [] }) => {
         <div className="col-span-2 row-span-2 overflow-hidden relative">
           <img 
             src={galleryImages[0]} 
+            onError={(e) => { e.target.onerror = null; e.target.src = "https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=1200&q=80"; }}
             className="w-full h-full object-cover hover:brightness-90 transition-all duration-500 cursor-pointer"
             alt="Main property"
           />
@@ -29,6 +30,7 @@ const ImageGallery = ({ images = [] }) => {
           <div key={idx} className="overflow-hidden relative">
             <img 
               src={img} 
+              onError={(e) => { e.target.onerror = null; e.target.src = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80"; }}
               className="w-full h-full object-cover hover:brightness-90 transition-all duration-500 cursor-pointer"
               alt={`Property view ${idx + 1}`}
             />
@@ -40,7 +42,12 @@ const ImageGallery = ({ images = [] }) => {
       <div className="md:hidden flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-[250px] rounded-xl">
         {galleryImages.map((img, idx) => (
           <div key={idx} className="min-w-full h-full snap-start">
-            <img src={img} className="w-full h-full object-cover" alt="Property view mobile" />
+            <img 
+              src={img} 
+              onError={(e) => { e.target.onerror = null; e.target.src = "https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=1200&q=80"; }}
+              className="w-full h-full object-cover" 
+              alt="Property view mobile" 
+            />
           </div>
         ))}
       </div>

@@ -1,17 +1,58 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import PropertyCard from "../components/PropertyCard";
-import { properties } from "../data/properties";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const Wishlist = () => {
-  // Demo ke liye hum initial state mein kuch properties le rahe hain
-  // Real app mein ye state ya database se aayega
-  const [wishlistItems, setWishlistItems] = useState(properties.slice(0, 3));
+  const [wishlistItems, setWishlistItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const removeFromWishlist = (id) => {
-    setWishlistItems((prev) => prev.filter((item) => item.id !== id));
+  const fetchWishlist = async () => {
+    try {
+      const res = await axios.get("http://localhost:8000/api/auth/wishlist", {
+        withCredentials: true,
+      });
+      if (res.data.success) {
+        setWishlistItems(res.data.wishlist);
+      }
+    } catch (error) {
+      console.log("Error fetching wishlist:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchWishlist();
+  }, []);
+
+  const removeFromWishlist = async (id) => {
+    try {
+      const res = await axios.post(`http://localhost:8000/api/auth/wishlist/${id}`, {}, {
+        withCredentials: true,
+      });
+      if (res.data.success) {
+        setWishlistItems(res.data.wishlist); // Wishlist array of full property objects or IDs?
+        // Wait, backend getWishlist populates it, but toggleWishlist returns just the IDs!
+        // We should just re-fetch or filter locally.
+        setWishlistItems((prev) => prev.filter((item) => item._id !== id));
+        toast.success("Removed from wishlist");
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to remove item");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FF385C]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-6 md:px-16 py-12 min-h-[70vh]">
@@ -34,7 +75,7 @@ const Wishlist = () => {
                 exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
                 className="relative"
               >
-                <PropertyCard property={property} />
+                <PropertyCard property={property} isWishlistedInitial={true} />
                 
                 {/* Custom Remove Button (Optional) */}
                 <button 

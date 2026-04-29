@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  --color-airbnb: #FF385C;
-  --color-airbnb-dark: #D90B38;
+  --color-airbnb: #111111; /* Kept variable name for backward compat but changed to black */
+  --color-airbnb-dark: #000000;
+  --color-luxe-gold: #D4AF37;
+  --font-serif: "Playfair Display", serif;
+  --font-sans: "Inter", sans-serif;
 }
 
 @layer base {
@@ -11,11 +14,14 @@
     scroll-behavior: smooth;
   }
   body {
-    @apply bg-white text-gray-800 antialiased;
+    @apply bg-white text-[#111] antialiased;
+  }
+  h1, h2, h3, .font-serif {
+    font-family: 'Playfair Display', serif !important;
   }
   ::selection {
-    background-color: #FFD7DF;
-    color: #2B2B2B;
+    background-color: #D4AF37;
+    color: #111111;
   }
 }
 

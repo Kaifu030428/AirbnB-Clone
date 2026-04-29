@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const SearchBar = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [location, setLocation] = useState("");
+  const [isListening, setIsListening] = useState(false);
   const navigate = useNavigate();
 
   const regions = [
@@ -13,35 +16,100 @@ const SearchBar = () => {
     { name: "India", img: "https://a0.muscache.com/im/pictures/663332ea-a99a-4649-b033-0f9bc48956b9.jpg" },
   ];
 
+  const handleVoiceSearch = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error("Voice search is not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      toast("Listening...", { icon: "🎙️", duration: 2000 });
+    };
+
+    recognition.onresult = async (event) => {
+      const transcript = event.results[0][0].transcript;
+      setLocation(transcript);
+      
+      const toastId = toast.loading("AI is analyzing your voice request...");
+      
+      try {
+        const response = await axios.post("http://localhost:8000/api/ai/voice-search", { transcript });
+        if (response.data.success) {
+          const { location: aiLocation, category: aiCategory } = response.data.filters;
+          toast.success("AI found the perfect match!", { id: toastId });
+          
+          let query = `/?`;
+          if (aiLocation) query += `location=${aiLocation}&`;
+          if (aiCategory) query += `category=${aiCategory}`;
+          
+          navigate(query);
+        }
+      } catch (error) {
+        toast.error("Failed to process voice command.", { id: toastId });
+      } finally {
+        setIsListening(false);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      setIsListening(false);
+      toast.error("Voice recognition failed. Please try again.");
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
+
   return (
-    <div className="relative flex justify-center w-full bg-white pb-4 z-[100]">
-      <div className={`relative flex items-center border border-gray-200 rounded-full shadow-md hover:shadow-lg transition-all ${isExpanded ? "bg-gray-100" : "bg-white"}`}>
+    <div className="relative flex justify-center w-full bg-transparent pb-4 z-[100]">
+      <div className={`relative flex items-center border border-gray-200 rounded-full shadow-md hover:shadow-lg transition-all ${isExpanded ? "bg-white" : "bg-white/80 backdrop-blur-md"}`}>
         
         {/* Destination Input */}
         <div 
-          className="flex flex-col px-8 py-3 cursor-pointer rounded-full hover:bg-white hover:shadow-md transition-all"
+          className="flex flex-col px-8 py-3 cursor-pointer rounded-full hover:bg-gray-50 transition-all"
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          <label className="text-[10px] font-bold uppercase">Where</label>
+          <label className="text-[10px] font-bold uppercase text-gray-800">Where</label>
           <input 
             type="text"
             placeholder="Search destinations"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            className="bg-transparent outline-none text-sm placeholder:text-gray-400"
+            className="bg-transparent outline-none text-sm placeholder:text-gray-400 text-black"
           />
         </div>
 
         <div className="h-8 w-[1px] bg-gray-200" />
 
+        {/* AI Voice Search Button */}
+        <div className="px-2">
+          <button 
+            onClick={handleVoiceSearch}
+            className={`p-2 rounded-full flex items-center justify-center transition-all ${isListening ? 'bg-red-100 text-red-500 animate-pulse' : 'hover:bg-gray-100 text-gray-600'}`}
+            title="AI Voice Search"
+          >
+            <span className="material-symbols-outlined text-[20px]">mic</span>
+          </button>
+        </div>
+
         {/* Search Button */}
-        <div className="pr-2 pl-4">
+        <div className="pr-2">
             <button 
-                onClick={() => navigate(`/search?location=${location}`)}
-                className="bg-[#FF385C] hover:bg-[#E31C5F] text-white p-3 rounded-full flex items-center gap-2 transition-all"
+                onClick={() => navigate(`/?location=${location}`)}
+                className="bg-[#D4AF37] hover:bg-[#b5952f] text-black p-3 rounded-full flex items-center gap-2 transition-all shadow-[0_4px_15px_rgba(212,175,55,0.3)]"
             >
-                <span className="material-symbols-outlined text-sm">search</span>
-                {isExpanded && <span className="text-sm font-semibold pr-2">Search</span>}
+                <span className="material-symbols-outlined text-sm font-bold">search</span>
+                {isExpanded && <span className="text-sm font-bold pr-2">Search</span>}
             </button>
         </div>
 

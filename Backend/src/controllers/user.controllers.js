@@ -2,7 +2,7 @@ const userModel = require("../models/user.models");
 
 const registerController = async (req, res) => {
     try {
-        let { name, email, phone, password } = req.body;
+        let { name, email, phone, password, role } = req.body;
 
         if (!name || !email || !phone || !password) {
             return res.status(400).json({ message: "All fields are required" });
@@ -13,9 +13,12 @@ const registerController = async (req, res) => {
             return res.status(400).json({ message: "User already exists" });
         }
 
+        // Default role is guest if not specified
+        const userRole = role === 'admin' ? 'admin' : 'guest';
+
         // Hashing ab Model apne aap kar lega `pre('save')` hook se!
         let newUser = await userModel.create({
-            name, email, phone, password
+            name, email, phone, password, role: userRole
         });
 
         return res.status(201).json({
@@ -25,7 +28,8 @@ const registerController = async (req, res) => {
                 id: newUser._id,
                 name: newUser.name,
                 email: newUser.email,
-                phone: newUser.phone
+                phone: newUser.phone,
+                role: newUser.role
             }
         });
 
@@ -70,6 +74,7 @@ const loginController = async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
+                role: user.role
             },
         });
         
@@ -97,4 +102,45 @@ const logoutController = async (req, res) => {
    }
 }
 
-module.exports = { registerController, loginController, logoutController };
+const toggleWishlist = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { propertyId } = req.params;
+
+        const user = await userModel.findById(userId);
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+        const isWishlisted = user.wishlist.includes(propertyId);
+        
+        if (isWishlisted) {
+            user.wishlist = user.wishlist.filter(id => id.toString() !== propertyId);
+        } else {
+            user.wishlist.push(propertyId);
+        }
+
+        await user.save();
+        
+        res.status(200).json({ 
+            success: true, 
+            message: isWishlisted ? "Removed from wishlist" : "Added to wishlist",
+            wishlist: user.wishlist
+        });
+    } catch (error) {
+        console.log("Error in toggleWishlist:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+const getWishlist = async (req, res) => {
+    try {
+        const user = await userModel.findById(req.user.id).populate('wishlist');
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+        res.status(200).json({ success: true, wishlist: user.wishlist });
+    } catch (error) {
+        console.log("Error in getWishlist:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+module.exports = { registerController, loginController, logoutController, toggleWishlist, getWishlist };
